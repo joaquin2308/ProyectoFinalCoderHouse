@@ -1,0 +1,726 @@
+
+  "name": "AI Multi Tool Agent Demo",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "2810f37d-0299-4cf1-bf52-f512c5abebd0",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "queja_urgente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "f0a74620-0e81-442b-8ff5-2ea016ba8525",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "sugerencia_producto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "d685d106-dba2-4312-93da-f85d7364f230",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "spam_o_troll",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "e6225f0e-fad2-4771-bc02-65cc11feeed2",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "fallback",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a9e7c75b-97d8-40dc-a669-0d00fa7c03fb",
+      "name": "Tool Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -1856,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos un asistente de soporte amable y cercano.\n\nComentario del usuario: {{ $json.input }}\n\nINSTRUCCIONES:\n1. Escribí ÚNICAMENTE el texto del mensaje que le vas a enviar al usuario.\n2. Sé breve, cálido y natural. Máximo 2 oraciones.\n3. Si es un saludo, respondé con simpatía.\n4. Si es una pregunta general, avisá que un humano lo va a contactar pronto.\n5. Si es un comentario positivo, agradecé con entusiasmo.\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1248,
+        -64
+      ],
+      "id": "a87a39b2-da69-4243-9599-506ecc0a291d",
+      "name": "Fallback LLM"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos un Analista de Sentimiento y Experto en UX. Tu misión es detectar la INTENCIÓN real y el TONO emocional detrás del comentario de un usuario.\n\nCategorías y Criterios de Clasificación:\n\nqueja_urgente:\nTono: Frustración, enojo, decepción o urgencia.\nIntención: Reportar un mal funcionamiento, un error técnico, falta de respuesta o un servicio deficiente.\nEjemplo directo: \"no puedo entrar\", \"se cae la app\", \"perdí ventas\", \"nadie me responde\".\nEjemplo indirecto: \"Sigo esperando...\", \"Antes funcionaba\", \"Es imposible usar esto\".\n\nsugerencia_producto:\nTono: Constructivo, curioso o esperanzado.\nIntención: Proponer mejoras, pedir nuevas funcionalidades o expresar deseos de cambio.\nEjemplo indirecto: \"Estaría bueno si...\", \"Me gustaría...\", \"Ojalá tuviera...\", \"Podrían agregar...\".\n\nspam_o_troll:\nTono: Agresivo, vulgar, sin sentido o irrelevante.\nIntención: Ninguna intención constructiva.\nPatrón: Palabras sueltas sin contexto, texto incomprensible, insultos sin reclamo, emojis solos, publicidad.\nIMPORTANTE: Si no podés identificar ninguna intención clara detrás del mensaje, clasificalo como spam_o_troll.\n\n\nfallback:\nTono: Neutro, positivo o curioso.\nIntención: Consulta general, saludo, comentario positivo o mensaje que no encaja en ninguna categoría anterior pero tiene una intención humana clara.\nIMPORTANTE: fallback es para mensajes válidos de personas reales. Si hay dudas entre fallback y spam_o_troll, preguntate: ¿hay una persona real intentando comunicar algo? Si sí, es fallback. Si no, es spam_o_troll.\n\nINSTRUCCIÓN DE SALIDA (ESTRICTA):\nResponde ÚNICAMENTE con un objeto JSON puro, sin ```json, sin bloques de código, sin explicaciones.\nEl formato debe ser exactamente este:\n{\"tool\": \"la_categoria\", \"sentiment\": \"positivo | negativo | neutral\", \"urgency\": 1 al 5, \"input\": \"el comentario original\"}\n\nComentario a clasificar: {{ $json[\"Comentario\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Comentario a clasificar: {{ $json[\"Comentario\"] }}"
+            }
+          ]
+        },
+        "batching": {
+          "batchSize": 5,
+          "delayBetweenBatches": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -2816,
+        -400
+      ],
+      "id": "0922086f-95a5-46be-b10a-cf28d86c5df8",
+      "name": "Agente Orquestador"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI",
+          "mode": "list",
+          "cachedResultName": "ComentariosRedes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3168,
+        -400
+      ],
+      "id": "78333195-26af-4d09-ad1e-210e69670bc0",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "espMugtaovNBTmIk",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos un Community Manager empático y directo. Respondé al siguiente comentario de un usuario que tiene una queja.\n\nComentario: {{ $json[\"input\"] }}\n\nINSTRUCCIONES:\n1. Escribí ÚNICAMENTE el texto del mensaje.\n2. Sé breve y humano. Máximo 2 oraciones.\n3. Pedí disculpas y ofrecé ayuda por privado.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1232,
+        -880
+      ],
+      "id": "bc1832b9-23e3-4836-a8b1-a49a33fce622",
+      "name": "Generador de disculpas"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos un Community Manager joven y cercano. Respondé al siguiente comentario de un usuario que hizo una sugerencia.\n\nComentario: {{ $json[\"input\"] }}\n\nINSTRUCCIONES:\n1. Escribí ÚNICAMENTE el texto del mensaje que le vas a enviar al usuario.\n2. Sé breve, humano y auténtico. Nada de lenguaje corporativo.\n3. Agradecé la idea con entusiasmo genuino.\n4. Decile que se lo pasás al equipo.\n5. Máximo 2 oraciones.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1232,
+        -560
+      ],
+      "id": "61986595-a6de-4bab-b89b-48c1da7ac17c",
+      "name": "Sugerencia Producto"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI",
+          "mode": "list",
+          "cachedResultName": "ComentariosRedes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h0toP2tU-GJ5AGy8Z64qKAujWV8bP5-78wyAi_uw4cI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $node[\"Google Sheets Trigger\"].json[\"ID\"] }}",
+            "Clasificacion ": "={{ $node[\"Code in JavaScript\"].json[\"tool\"] }}",
+            "Respuesta Sugerida": "={{ $if($('Generador de disculpas').isExecuted, $('Generador de disculpas').item.json.text, $if($('Sugerencia Producto').isExecuted, $('Sugerencia Producto').item.json.text, $if($('Fallback LLM').isExecuted, $('Fallback LLM').item.json.text, '[Spam/Troll - sin respuesta]'))) }}",
+            "Fecha": "={{ $now.toFormat('dd/MM/yyyy HH:mm') }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Usuario",
+              "displayName": "Usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Comentario",
+              "displayName": "Comentario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Red Social",
+              "displayName": "Red Social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Clasificacion ",
+              "displayName": "Clasificacion ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Respuesta Sugerida",
+              "displayName": "Respuesta Sugerida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -640,
+        -96
+      ],
+      "id": "8fbe3953-a078-4eb6-95c1-57327825aef5",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CHmwOdMIvdvOGNgr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText = ($input.item.json.text || \"\");\n\nconst cleaned = rawText\n  .replace(/```json\\s*/gi, \"\")\n  .replace(/```\\s*/gi, \"\")\n  .trim();\n\nlet tool = \"fallback\";\nlet inputOriginal = cleaned;\n\ntry {\n  const data = JSON.parse(cleaned);\n  tool = data.tool || \"fallback\";\n  inputOriginal = data.input || rawText;\n} catch (e) {\n  const lower = cleaned.toLowerCase();\n  if (lower.includes(\"queja\") || lower.includes(\"cae\") || lower.includes(\"no funciona\") || lower.includes(\"error\") || lower.includes(\"no puedo\") || lower.includes(\"perdi\") || lower.includes(\"perdí\")) tool = \"queja_urgente\";\n  else if (lower.includes(\"sugerencia\") || lower.includes(\"estaria\") || lower.includes(\"estaría\") || lower.includes(\"podrian\") || lower.includes(\"podrían\") || lower.includes(\"me gustaria\")) tool = \"sugerencia_producto\";\n  else if (lower.includes(\"spam\") || lower.includes(\"troll\") || lower.includes(\"odio\") || lower.includes(\"mierda\")) tool = \"spam_o_troll\";\n}\n\nconst comentarioOriginal = $input.item.json[\"Comentario\"] \n  || $('Google Sheets Trigger').item.json[\"Comentario\"] \n  || inputOriginal;\n\nreturn {\n  tool: tool,\n  input: comentarioOriginal\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        -400
+      ],
+      "id": "ed49ca66-3a9b-447f-a4cd-723f31e71442",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -2816,
+        -240
+      ],
+      "id": "a995ada2-23fc-4654-84c5-dcb3b14bb5e8",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "8D7OQdkr3yGd2qk6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -720
+      ],
+      "id": "81c320d1-eddf-4ead-8da9-4fc30e45dc85",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "8D7OQdkr3yGd2qk6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -384
+      ],
+      "id": "a1494cf9-491b-4d3e-883d-990cd5004ea5",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "8D7OQdkr3yGd2qk6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        96
+      ],
+      "id": "22739960-0c0f-4b2e-a1e8-9555a23e7c5c",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "8D7OQdkr3yGd2qk6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6236712639",
+        "text": "=🚨 *Nueva queja urgente*\n\n👤 *Usuario:* {{ $('Google Sheets Trigger').item.json[\"Usuario\"] }}\n🌐 *Red Social:* {{ $('Google Sheets Trigger').item.json[\"Red Social\"] }}\n💬 *Comentario:* {{ $('Google Sheets Trigger').item.json[\"Comentario\"] }}\n\n📝 *Respuesta sugerida:*\n{{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -944,
+        -880
+      ],
+      "id": "042583be-655a-4bfe-8c20-ad8934708ccc",
+      "name": "Send a text message",
+      "webhookId": "8372e993-e023-44b9-9122-81f6a28ccc14",
+      "credentials": {
+        "telegramApi": {
+          "id": "SUocc0IpDfszXQ4o",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": " MÓDULO 1 — TRIGGER\nDetecta atomáticamente nuevas filas en Google Sheets.\nPolling cada 1 minuto. Trigger On: Row Added.\nCada fila representa un comentario de red social a procesar.",
+        "height": 368,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3248,
+        -576
+      ],
+      "id": "6ca4f230-591f-46e6-bffe-9f7d355bcedb",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "MÓDULO 2 — CLASIFICADOR (LLM 1)\nAgente Orquestador analiza el comentario y devuelve un JSON estructurado con:\n- tool: categoría detectada\n- sentiment: positivo / negativo / neutral\n- urgency: nivel de urgencia 1 a 5\n- input: comentario original limpio",
+        "height": 448,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2880,
+        -576
+      ],
+      "id": "dae0ff14-655d-4f88-8e62-a5d3c765cec5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": " MÓDULO 3 — PARSER\nNodo JavaScript que:\n1. Limpia la respuesta del LLM (elimina bloques ```json)\n2. Parsea el JSON y extrae el campo tool\n3. Si el JSON falla, clasifica por palabras clave (fallback de robustez)",
+        "height": 336,
+        "width": 304,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2352,
+        -576
+      ],
+      "id": "47976fbe-5cda-47ce-b590-f3400fc94ebb",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "MÓDULO 4 — BIFURCACIÓN\nTool Switch enruta el flujo según el campo tool:\n→ queja_urgente\n→ sugerencia_producto\n→ spam_o_troll\n→ fallback",
+        "height": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        -560
+      ],
+      "id": "5b7fcc69-f5f4-457c-91f6-052aeb74e93d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "MÓDULO 5 — GENERACIÓN DE RESPUESTAS\nCada rama ejecuta un LLM distinto según la categoría:\n- queja_urgente → respuesta empática + Telegram al equipo\n- sugerencia_producto → respuesta entusiasta\n- spam_o_troll → sin respuesta (solo clasificación)\n- fallback → respuesta genérica y cálida",
+        "height": 1296,
+        "width": 672,
+        "color": "#320B38"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        -1056
+      ],
+      "id": "6998ce13-2304-4389-bb49-21c6b916bdea",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": " MÓDULO 6 — REGISTRO EN SHEET\nActualiza la fila original en Google Sheets con:\n- Clasificacion: categoría detectada por el LLM\n- Respuesta Sugerida: texto generado por el LLM de la rama\n- Fecha: timestamp automático del momento de procesamiento",
+        "height": 400,
+        "width": 256,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -336
+      ],
+      "id": "cfd6aab7-9e6e-4019-86c9-11b241cbf8d6",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tool Switch": {
+      "main": [
+        [
+          {
+            "node": "Generador de disculpas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sugerencia Producto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback LLM": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Orquestador": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generador de disculpas": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sugerencia Producto": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Agente Orquestador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Tool Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Orquestador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generador de disculpas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sugerencia Producto",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Fallback LLM",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6d867349-9cf3-4e76-bf95-00bf077f2ed2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7a4af4b4abc2d2960b315dff26ddced332464ae92ae1920073c183bec1cf4cd9"
+  },
+  "id": "NZIVg7oSy87eA703",
+  "tags": []
+}
